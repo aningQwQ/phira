@@ -47,8 +47,8 @@ jobs:
           cache-on-failure: "true"
           cache-all-crates: "true"
 
-      - name: Build APK
-        run: cargo apk build -p phira --no-default-features --release
+      - name: Build APK (debug)
+        run: cargo apk build -p phira --no-default-features
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
@@ -57,5 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: phira-apk
-          path: target/release/apk/*.apk
+          path: target/debug/apk/*.apk
           if-no-files-found: error
