@@ -3,8 +3,6 @@ name: Android APK
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 env:
@@ -29,17 +27,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android platform
+      - name: Install Android SDK components
         run: |
-          yes | sdkmanager "platforms;android-30" "build-tools;30.0.3"
+          yes | sdkmanager \
+            "platforms;android-30" \
+            "build-tools;30.0.3" \
+            "ndk;27.0.12077973"
 
       - name: Setup Rust toolchain
         run: |
           rustup toolchain install
           rustup target add aarch64-linux-android
-
-      - name: Install cargo-apk
-        run: cargo install cargo-apk
+          cargo install cargo-ndk
 
       - name: Cache
         uses: Swatinem/rust-cache@v2
@@ -47,15 +46,75 @@ jobs:
           cache-on-failure: "true"
           cache-all-crates: "true"
 
-      - name: Build APK (debug)
-        run: cargo apk build -p phira --no-default-features
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+      - name: Generate debug keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore \
+            -storepass android -alias androiddebugkey \
+            -keypass android -keyalg RSA -keysize 2048 \
+            -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Build native library
+        run: |
+          ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973 \
+          cargo ndk -t arm64-v8a -o jniLibs build -p phira --no-default-features --release
+
+      - name: Create APK
+        run: |
+          mkdir -p apk/build/apk
+          cd apk/build
+
+          # Create AndroidManifest.xml
+          cat > AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.phira"
+              android:versionCode="1"
+              android:versionName="1.0">
+              <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="30"/>
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+              <application
+                  android:label="Phira"
+                  android:hasCode="false">
+                  <activity
+                      android:name="android.app.NativeActivity"
+                      android:exported="true">
+                      <meta-data android:name="android.app.lib_name" android:value="phira"/>
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          # Copy native library
+          mkdir -p lib/arm64-v8a
+          cp ../../jniLibs/arm64-v8a/libphira.so lib/arm64-v8a/
+
+          # Package with aapt
+          $ANDROID_HOME/build-tools/30.0.3/aapt package -f \
+            -M AndroidManifest.xml \
+            -S /dev/null \
+            -I $ANDROID_HOME/platforms/android-30/android.jar \
+            -F phira-unsigned.apk \
+            lib/
+
+          # Align and sign
+          $ANDROID_HOME/build-tools/30.0.3/zipalign -f 4 phira-unsigned.apk phira-aligned.apk
+          $ANDROID_HOME/build-tools/30.0.3/apksigner sign \
+            --ks ../../debug.keystore \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --ks-key-alias androiddebugkey \
+            --out phira.apk \
+            phira-aligned.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: phira-apk
-          path: target/debug/apk/*.apk
+          path: apk/build/phira.apk
           if-no-files-found: error
