@@ -1,0 +1,77 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PRPR_AVC_FFMPEG_VERSION: 20260309_v0
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Rust toolchain
+        run: |
+          rustup toolchain install
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk
+
+      - name: Download FFmpeg static libs (arm64)
+        run: |
+          mkdir -p prpr-avc/static-lib/aarch64-linux-android
+          curl -fL --retry 3 \
+            -o prpr-avc-static-lib-arm64.tar.gz \
+            https://github.com/TeamFlos/prpr-avc-ffmpeg/releases/download/${PRPR_AVC_FFMPEG_VERSION}/aarch64-linux-android.tar.gz
+          tar -xzf prpr-avc-static-lib-arm64.tar.gz -C prpr-avc/static-lib/aarch64-linux-android
+
+      - name: Download FFmpeg static libs (armv7)
+        run: |
+          mkdir -p prpr-avc/static-lib/armv7-linux-androideabi
+          curl -fL --retry 3 \
+            -o prpr-avc-static-lib-armv7.tar.gz \
+            https://github.com/TeamFlos/prpr-avc-ffmpeg/releases/download/${PRPR_AVC_FFMPEG_VERSION}/armv7-linux-androideabi.tar.gz
+          tar -xzf prpr-avc-static-lib-armv7.tar.gz -C prpr-avc/static-lib/armv7-linux-androideabi
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+          cache-all-crates: "true"
+
+      - name: Build APK (arm64)
+        run: cargo apk build --target aarch64-linux-android --release
+        env:
+          ANDROID_HOME: ${{ github.workspace }}/android-sdk
+
+      - name: Build APK (armv7)
+        run: cargo apk build --target armv7-linux-androideabi --release
+        env:
+          ANDROID_HOME: ${{ github.workspace }}/android-sdk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: phira-apk
+          path: target/release/apk/*.apk
+          if-no-files-found: warn
