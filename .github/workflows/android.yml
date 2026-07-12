@@ -32,26 +32,10 @@ jobs:
       - name: Setup Rust toolchain
         run: |
           rustup toolchain install
-          rustup target add aarch64-linux-android armv7-linux-androideabi
+          rustup target add aarch64-linux-android
 
       - name: Install cargo-apk
         run: cargo install cargo-apk
-
-      - name: Download FFmpeg static libs (arm64)
-        run: |
-          mkdir -p prpr-avc/static-lib/aarch64-linux-android
-          curl -fL --retry 3 \
-            -o prpr-avc-static-lib-arm64.tar.gz \
-            https://github.com/TeamFlos/prpr-avc-ffmpeg/releases/download/${PRPR_AVC_FFMPEG_VERSION}/aarch64-linux-android.tar.gz
-          tar -xzf prpr-avc-static-lib-arm64.tar.gz -C prpr-avc/static-lib/aarch64-linux-android
-
-      - name: Download FFmpeg static libs (armv7)
-        run: |
-          mkdir -p prpr-avc/static-lib/armv7-linux-androideabi
-          curl -fL --retry 3 \
-            -o prpr-avc-static-lib-armv7.tar.gz \
-            https://github.com/TeamFlos/prpr-avc-ffmpeg/releases/download/${PRPR_AVC_FFMPEG_VERSION}/armv7-linux-androideabi.tar.gz
-          tar -xzf prpr-avc-static-lib-armv7.tar.gz -C prpr-avc/static-lib/armv7-linux-androideabi
 
       - name: Cache
         uses: Swatinem/rust-cache@v2
@@ -59,19 +43,15 @@ jobs:
           cache-on-failure: "true"
           cache-all-crates: "true"
 
-      - name: Build APK (arm64)
-        run: cargo apk build --target aarch64-linux-android --release
+      - name: Build APK
+        run: cargo apk build -p phira --no-default-features --release
         env:
-          ANDROID_HOME: ${{ github.workspace }}/android-sdk
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
-      - name: Build APK (armv7)
-        run: cargo apk build --target armv7-linux-androideabi --release
-        env:
-          ANDROID_HOME: ${{ github.workspace }}/android-sdk
-
-      - name: Upload APK artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: phira-apk
           path: target/release/apk/*.apk
-          if-no-files-found: warn
+          if-no-files-found: error
