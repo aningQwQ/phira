@@ -16,6 +16,8 @@ item-adjust-sub = Ustaw opóźnienie automatycznie, aby zsynchronizować muzykę
 item-music = Głośność muzyki
 item-sfx = Głośność SFX
 item-cali = Ustaw opóźnienie
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-dc-pause = Kliknij podwójnie, aby zatrzymać
 item-dhint = Podwójna wskazówka

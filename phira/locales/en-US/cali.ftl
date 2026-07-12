@@ -1,2 +1,3 @@
 
-label = CALIBRATION
+label-audio = AUDIO CALIBRATION
+label-video = VIDEO CALIBRATION

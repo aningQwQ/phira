@@ -70,6 +70,8 @@ pub struct Config {
     pub note_scale: f32,
     pub offline_mode: bool,
     pub offset: f32,
+    pub audio_offset: f32,
+    pub video_offset: f32,
     pub particle: bool,
     pub player_name: String,
     pub player_rks: f32,
@@ -110,6 +112,8 @@ impl Default for Config {
             offline_mode: false,
             fullscreen_mode: false,
             offset: 0.,
+            audio_offset: 0.,
+            video_offset: 0.,
             particle: true,
             player_name: "Mivik".to_string(),
             player_rks: 15.,
@@ -132,6 +136,10 @@ impl Default for Config {
 
 impl Config {
     pub fn init(&mut self) {
+        if self.offset != 0. && self.audio_offset == 0. && self.video_offset == 0. {
+            self.audio_offset = self.offset / 2.;
+            self.video_offset = self.offset / 2.;
+        }
         if let Some(flag) = self.autoplay {
             self.mods.set(Mods::AUTOPLAY, flag);
         }

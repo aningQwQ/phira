@@ -34,6 +34,8 @@ item-music = 음악 볼륨
 item-sfx = 효과음 볼륨
 item-bgm = BGM 볼륨
 item-cali = 오프셋 조정
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = 실시간 정확도 표시
 item-dc-pause = 더블 클릭으로 일시 정지

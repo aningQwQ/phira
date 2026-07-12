@@ -39,6 +39,8 @@ item-music = Âm lượng nhạc
 item-sfx = Âm lượng Note
 item-bgm = Âm lượng nhạc nền
 item-cali = Hiệu chỉnh
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = Hiển thị độ chính xác theo thời gian thực
 item-dc-pause = Chạm hai lần để tạm dừng

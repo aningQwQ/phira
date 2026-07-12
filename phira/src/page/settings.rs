@@ -1,6 +1,6 @@
 prpr_l10n::tl_file!("settings");
 
-use super::{NextPage, OffsetPage, Page, SharedState};
+use super::{AudioCalibrationPage, NextPage, Page, SharedState, VideoCalibrationPage};
 use crate::{
     dir, get_data, get_data_mut,
     popup::ChooseButton,
@@ -659,12 +659,14 @@ struct AudioList {
     music_slider: Slider,
     sfx_slider: Slider,
     bgm_slider: Slider,
-    cali_btn: DRectButton,
+    audio_cali_btn: DRectButton,
+    video_cali_btn: DRectButton,
     #[cfg(not(target_os = "android"))]
     preferred_sample_rate_btn: DRectButton,
     #[cfg(target_env = "ohos")]
     audio_buffer_size_btn: DRectButton,
-    cali_task: LocalTask<Result<OffsetPage>>,
+    audio_cali_task: LocalTask<Result<AudioCalibrationPage>>,
+    video_cali_task: LocalTask<Result<VideoCalibrationPage>>,
     next_page: Option<NextPage>,
 }
 
@@ -675,13 +677,15 @@ impl AudioList {
             music_slider: Slider::new(0.0..2.0, 0.05),
             sfx_slider: Slider::new(0.0..2.0, 0.05),
             bgm_slider: Slider::new(0.0..2.0, 0.05),
-            cali_btn: DRectButton::new(),
+            audio_cali_btn: DRectButton::new(),
+            video_cali_btn: DRectButton::new(),
             #[cfg(not(target_os = "android"))]
             preferred_sample_rate_btn: DRectButton::new(),
             #[cfg(target_env = "ohos")]
             audio_buffer_size_btn: DRectButton::new(),
 
-            cali_task: None,
+            audio_cali_task: None,
+            video_cali_task: None,
             next_page: None,
         }
     }
@@ -710,8 +714,12 @@ impl AudioList {
             }
             return Ok(wt);
         }
-        if self.cali_btn.touch(touch, t) {
-            self.cali_task = Some(Box::pin(OffsetPage::new()));
+        if self.audio_cali_btn.touch(touch, t) {
+            self.audio_cali_task = Some(Box::pin(AudioCalibrationPage::new()));
+            return Ok(Some(false));
+        }
+        if self.video_cali_btn.touch(touch, t) {
+            self.video_cali_task = Some(Box::pin(VideoCalibrationPage::new()));
             return Ok(Some(false));
         }
         #[cfg(not(target_os = "android"))]
@@ -734,7 +742,7 @@ impl AudioList {
     }
 
     pub fn update(&mut self, _t: f32) -> Result<bool> {
-        if let Some(task) = &mut self.cali_task {
+        if let Some(task) = &mut self.audio_cali_task {
             if let Some(res) = poll_future(task.as_mut()) {
                 match res {
                     Err(err) => show_error(err.context(tl!("load-cali-failed"))),
@@ -742,7 +750,18 @@ impl AudioList {
                         self.next_page = Some(NextPage::Overlay(Box::new(page)));
                     }
                 }
-                self.cali_task = None;
+                self.audio_cali_task = None;
+            }
+        }
+        if let Some(task) = &mut self.video_cali_task {
+            if let Some(res) = poll_future(task.as_mut()) {
+                match res {
+                    Err(err) => show_error(err.context(tl!("load-cali-failed"))),
+                    Ok(page) => {
+                        self.next_page = Some(NextPage::Overlay(Box::new(page)));
+                    }
+                }
+                self.video_cali_task = None;
             }
         }
         Ok(false)
@@ -779,8 +798,12 @@ impl AudioList {
             self.bgm_slider.render(ui, rr, t, config.volume_bgm, format!("{:.2}", config.volume_bgm));
         }
         item! {
-            render_title(ui, tl!("item-cali"), None);
-            self.cali_btn.render_text(ui, rr, t, format!("{:.0}ms", config.offset * 1000.), 0.5, true);
+            render_title(ui, tl!("item-cali-audio"), None);
+            self.audio_cali_btn.render_text(ui, rr, t, format!("{:.0}ms", config.audio_offset * 1000.), 0.5, true);
+        }
+        item! {
+            render_title(ui, tl!("item-cali-video"), None);
+            self.video_cali_btn.render_text(ui, rr, t, format!("{:.0}ms", config.video_offset * 1000.), 0.5, true);
         }
         #[cfg(not(target_os = "android"))]
         item! {

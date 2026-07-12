@@ -39,6 +39,8 @@ item-music = Volume de la musique
 item-sfx = Volume des effets sonores
 item-bgm = Volume de la musique de fond
 item-cali = Ajuster le décalage
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = Afficher la précision en temps réel
 item-dc-pause = Double-appui pour mettre en pause

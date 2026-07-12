@@ -26,6 +26,8 @@ item-music = Müzik sesi
 item-sfx = Ses efektleri
 item-bgm = Arkaplan müziği
 item-cali = Dengeyi ayarla
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = Doğruluğu gerçek zamanlı göster
 item-dc-pause = Durdurmak için çift dokun

@@ -39,6 +39,8 @@ item-music = Musiklautstärke
 item-sfx = SFX-Lautstärke
 item-bgm = Hintergrundmusik-Lautstärke
 item-cali = Offset anpassen
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = Genauigkeit in Echtzeit
 item-dc-pause = Doppeltippen zum Pausieren

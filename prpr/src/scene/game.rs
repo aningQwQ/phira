@@ -300,7 +300,7 @@ impl GameScene {
             }
         });
 
-        let exercise_range = (chart.offset + info_offset + res.config.offset) as f64..res.track_length;
+        let exercise_range = (chart.offset + info_offset + res.config.audio_offset + res.config.video_offset) as f64..res.track_length;
 
         let judge = Judge::new(&chart);
 
@@ -799,7 +799,7 @@ impl GameScene {
     }
 
     fn offset(&self) -> f32 {
-        self.chart.offset + self.res.config.offset + self.info_offset
+        self.chart.offset + self.res.config.audio_offset + self.res.config.video_offset + self.info_offset
     }
 
     fn tweak_offset(&mut self, ui: &mut Ui, ita: bool) {

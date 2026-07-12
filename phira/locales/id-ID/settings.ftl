@@ -26,6 +26,8 @@ item-music = Volume musik
 item-sfx = Volume efek suara
 item-bgm = Volume BGM
 item-cali = Penyesuaian offset
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = Tunjukkan akurasi waktu nyata
 item-dc-pause = Tekan dua kali untuk pause

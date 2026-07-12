@@ -39,6 +39,8 @@ item-music = เสียงเพลง
 item-sfx = เสียง Sound effect
 item-bgm = เสียง BGM
 item-cali = ปรับ Offset
+item-cali-audio = Audio Calibration
+item-cali-video = Video Calibration
 
 item-show-acc = โชว์ค่า Accuracy
 item-dc-pause = กด 2 ครั้งเพื่อหยุด
